@@ -335,8 +335,6 @@
             text-align: center;
         }
         
-        /* --- START OF CSS FIX --- */
-        /* 手機版優先的版面配置 (Mobile-First) */
         .status-info {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -348,20 +346,16 @@
                 "timer timer";
         }
 
-        /* 桌面版的版面配置 (寬度大於 850px 才套用) */
         @media (min-width: 850px) {
             .status-info {
                 grid-template-columns: repeat(5, 1fr);
                 grid-template-rows: auto auto;
                 gap: 10px;
-                /* 修正：調整第二排的欄位寬度，使其視覺更平衡 */
                 grid-template-areas:
                     "role name total correct wrong"
                     "hearts hearts hearts timer timer";
             }
         }
-        /* --- END OF CSS FIX --- */
-
 
         .status-item {
             text-align: center;
@@ -522,7 +516,7 @@
         <h1 class="game-title">勞基法試煉</h1>
         <img src="picture1.png" alt="勞基法試煉遊戲主圖" class="poster-image">
         <p class="game-subtitle">
-            準備好接受勞動法規的終極考驗了嗎？<br>
+            準備好接受勞基法的終極考驗了嗎？<br>
             選擇你的角色，踏上成為勞基法大師的道路！
         </p>
         <div class="button-container">
@@ -604,7 +598,9 @@
         <h1 class="result-title victory">🎉 恭喜你！🎉</h1>
         <p style="font-size: 1.3em; color: #27ae60; margin-bottom: 0;">能夠把題庫作答完畢，你真是勞基法大師啊！</p>
         <div class="result-stats" id="victory-stats-container"></div>
-        <div class="result-image-placeholder">勝利插圖位置 (可替換成勝利圖片)</div>
+        <div class="result-image-placeholder">
+            <img src="passall.png" alt="遊戲勝利示意圖">
+        </div>
         <div class="result-buttons-container">
             <button class="restart-button" onclick="restartGame()">🎮 重新開始</button>
             <button class="download-button" onclick="downloadResultImage('victory-page', event)">🖼️ 挑戰紀錄下載</button>
@@ -817,7 +813,6 @@
             document.getElementById('defeat-page').classList.remove('hidden');
         }
 
-        // --- START OF JAVASCRIPT FIX ---
         async function downloadResultImage(elementId, event) {
             const button = event.target;
             const originalElement = document.getElementById(elementId);
@@ -827,15 +822,13 @@
             button.disabled = true;
             button.textContent = '正在產生圖片...';
 
-            // 建立一個臨時容器來進行截圖，避免影響原始畫面且能設定背景
             const captureContainer = document.createElement('div');
             captureContainer.style.position = 'absolute';
-            captureContainer.style.left = '-9999px'; // 移出畫面外
+            captureContainer.style.left = '-9999px'; 
             captureContainer.style.top = '0px';
             captureContainer.style.width = originalElement.offsetWidth + 'px';
             
             const clone = originalElement.cloneNode(true);
-            // 強制設定白色背景，避免漸層背景在截圖時變透明
             clone.style.background = '#ffffff'; 
             clone.style.backdropFilter = 'none';
             clone.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)'; 
@@ -846,8 +839,8 @@
             try {
                 const canvas = await html2canvas(clone, {
                     useCORS: true,
-                    scale: 2, // 產生 2x 解析度的圖片，在手機上更清晰
-                    backgroundColor: '#ffffff' // 明確設定背景色，避免透明問題
+                    scale: 2, 
+                    backgroundColor: '#ffffff'
                 });
                 
                 const link = document.createElement('a');
@@ -859,14 +852,12 @@
                 console.error('下載紀錄時發生錯誤:', error);
                 alert('抱歉，下載紀錄時發生預期外的錯誤，請稍後再試。');
             } finally {
-                // 清理臨時建立的元素
                 document.body.removeChild(captureContainer);
                 button.disabled = false;
                 button.textContent = originalButtonText;
             }
         }
-        // --- END OF JAVASCRIPT FIX ---
-
+        
         function restartGame() {
             document.querySelectorAll('.main-container').forEach(c => c.classList.add('hidden'));
             document.querySelectorAll('.fate-chance-overlay').forEach(o => o.remove());
