@@ -335,27 +335,33 @@
             text-align: center;
         }
         
+        /* --- START OF CSS MODIFICATION --- */
+        /* 手機版優先的版面配置 (Mobile-First) */
         .status-info {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
+            /* 修改: 調整版面，將生命值移至第二排最左邊 */
             grid-template-areas:
                 "role name"
-                "total correct"
-                "wrong hearts"
-                "timer timer";
+                "hearts total"
+                "correct wrong"
+                "timer date";
         }
 
+        /* 桌面版的版面配置 (寬度大於 850px 才套用) */
         @media (min-width: 850px) {
             .status-info {
-                grid-template-columns: repeat(5, 1fr);
+                grid-template-columns: repeat(6, 1fr);
                 grid-template-rows: auto auto;
                 gap: 10px;
+                /* 修改: 將生命值移至第二排最左邊，並重新分配版面 */
                 grid-template-areas:
-                    "role name total correct wrong"
-                    "hearts hearts hearts timer timer";
+                    "role name name total correct wrong"
+                    "hearts hearts timer timer date date";
             }
         }
+        /* --- END OF CSS MODIFICATION --- */
 
         .status-item {
             text-align: center;
@@ -363,7 +369,8 @@
             padding: 10px;
             border-radius: 10px;
         }
-
+        
+        /* --- START OF CSS MODIFICATION --- */
         #status-role { grid-area: role; }
         #status-name { grid-area: name; }
         #status-total { grid-area: total; }
@@ -371,6 +378,8 @@
         #status-wrong { grid-area: wrong; }
         #status-hearts { grid-area: hearts; }
         #status-timer { grid-area: timer; }
+        #status-date { grid-area: date; } /* 新增: 為新元素指定 grid 區域 */
+        /* --- END OF CSS MODIFICATION --- */
 
         .status-label {
             font-size: 0.9em;
@@ -549,15 +558,15 @@
         <div class="status-panel">
             <div class="character-avatar" id="player-avatar">👷</div>
             <div class="status-info">
-                <!-- 第一排 -->
+                <!-- 角色、姓名等資訊會由 CSS Grid 自動排版 -->
                 <div class="status-item" id="status-role"><div class="status-label">角色</div><div class="status-value" id="player-role">勞工</div></div>
                 <div class="status-item" id="status-name"><div class="status-label">姓名</div><div class="status-value" id="player-name">玩家</div></div>
                 <div class="status-item" id="status-total"><div class="status-label">總題數</div><div class="status-value" id="total-questions">0</div></div>
                 <div class="status-item" id="status-correct"><div class="status-label">答對</div><div class="status-value" id="correct-answers" style="color: #27ae60;">0</div></div>
                 <div class="status-item" id="status-wrong"><div class="status-label">答錯</div><div class="status-value" id="wrong-answers" style="color: #e74c3c;">0</div></div>
-                <!-- 第二排 -->
                 <div class="status-item" id="status-hearts"><div class="status-label">生命值</div><div class="status-value hearts" id="hearts">❤️❤️❤️</div></div>
                 <div class="status-item" id="status-timer"><div class="status-label">遊戲時間</div><div class="status-value" id="game-timer">00:00</div></div>
+                <div class="status-item" id="status-date"><div class="status-label">遊戲日期</div><div class="status-value" id="game-date"></div></div>
             </div>
         </div>
 
@@ -632,12 +641,14 @@
     
     <!-- 遊戲主要邏輯 -->
     <script>
+        // --- START OF JAVASCRIPT MODIFICATION ---
         let gameState = {
             currentPage: 'main', selectedRole: '', selectedEmoji: '', playerName: '', hearts: 3, 
             totalQuestions: 0, correctAnswers: 0, wrongAnswers: 0, currentQuestionIndex: 0,
             usedQuestions: [], selectedAnswer: null, questionsBeforeFateChance: 0,
-            gameTimer: null, elapsedTime: 0 
+            gameTimer: null, elapsedTime: 0, gameDateString: '' // 新增: 用於儲存遊戲日期字串
         };
+        // --- END OF JAVASCRIPT MODIFICATION ---
 
         function showCharacterSelection() {
             document.getElementById('main-page').classList.add('hidden');
@@ -673,6 +684,13 @@
             gameState.hearts = 3; gameState.totalQuestions = 0; gameState.correctAnswers = 0;
             gameState.wrongAnswers = 0; gameState.currentQuestionIndex = 0; gameState.usedQuestions = [];
             gameState.selectedAnswer = null; gameState.questionsBeforeFateChance = 0; gameState.elapsedTime = 0;
+            
+            // --- START OF JAVASCRIPT MODIFICATION ---
+            // 獲取並格式化當前日期
+            const today = new Date();
+            gameState.gameDateString = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+            // --- END OF JAVASCRIPT MODIFICATION ---
+
             if (gameState.gameTimer) clearInterval(gameState.gameTimer);
             gameState.gameTimer = setInterval(() => {
                 gameState.elapsedTime++;
@@ -692,6 +710,9 @@
             document.getElementById('correct-answers').textContent = gameState.correctAnswers;
             document.getElementById('wrong-answers').textContent = gameState.wrongAnswers;
             document.getElementById('hearts').textContent = '❤️'.repeat(Math.max(0, Math.floor(gameState.hearts)));
+            // --- START OF JAVASCRIPT MODIFICATION ---
+            document.getElementById('game-date').textContent = gameState.gameDateString; // 更新日期顯示
+            // --- END OF JAVASCRIPT MODIFICATION ---
         }
 
         function loadNextQuestion() {
@@ -790,13 +811,16 @@
             const minutes = Math.floor(gameState.elapsedTime / 60).toString().padStart(2, '0');
             const seconds = (gameState.elapsedTime % 60).toString().padStart(2, '0');
             const formattedTime = `${minutes}:${seconds}`;
+            // --- START OF JAVASCRIPT MODIFICATION ---
             container.innerHTML = `
                 <div class="result-stat-item"><div class="result-stat-label">角色名稱</div><div class="result-stat-value">${gameState.playerName}</div></div>
                 <div class="result-stat-item"><div class="result-stat-label">總答題數</div><div class="result-stat-value">${gameState.totalQuestions}</div></div>
                 <div class="result-stat-item"><div class="result-stat-label">答對</div><div class="result-stat-value highlight-green">${gameState.correctAnswers}</div></div>
                 <div class="result-stat-item"><div class="result-stat-label">答錯</div><div class="result-stat-value highlight-red">${gameState.wrongAnswers}</div></div>
                 <div class="result-stat-item"><div class="result-stat-label">答對率</div><div class="result-stat-value">${accuracy}%</div></div>
-                <div class="result-stat-item"><div class="result-stat-label">遊戲時間</div><div class="result-stat-value">${formattedTime}</div></div>`;
+                <div class="result-stat-item"><div class="result-stat-label">遊戲時間</div><div class="result-stat-value">${formattedTime}</div></div>
+                <div class="result-stat-item"><div class="result-stat-label">遊戲日期</div><div class="result-stat-value">${gameState.gameDateString}</div></div>`;
+            // --- END OF JAVASCRIPT MODIFICATION ---
         }
 
         function showVictoryPage() {
@@ -863,12 +887,15 @@
             document.querySelectorAll('.fate-chance-overlay').forEach(o => o.remove());
             document.getElementById('main-page').classList.remove('hidden');
             if (gameState.gameTimer) clearInterval(gameState.gameTimer);
+            // --- START OF JAVASCRIPT MODIFICATION ---
             gameState = {
                 currentPage: 'main', selectedRole: '', selectedEmoji: '', playerName: '', hearts: 3, totalQuestions: 0,
                 correctAnswers: 0, wrongAnswers: 0, currentQuestionIndex: 0, usedQuestions: [], selectedAnswer: null,
-                questionsBeforeFateChance: 0, gameTimer: null, elapsedTime: 0
+                questionsBeforeFateChance: 0, gameTimer: null, elapsedTime: 0, gameDateString: '' // 重置日期
             };
+            // --- END OF JAVASCRIPT MODIFICATION ---
             document.getElementById('game-timer').textContent = '00:00';
+            document.getElementById('game-date').textContent = '';
             document.querySelector('.name-input').value = '';
             document.querySelector('.name-input-section').style.display = 'none';
             document.querySelector('.start-button-section').style.display = 'none';
