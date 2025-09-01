@@ -334,23 +334,34 @@
             font-size: 4em;
             text-align: center;
         }
-
+        
+        /* --- START OF CSS FIX --- */
+        /* 手機版優先的版面配置 (Mobile-First) */
         .status-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            grid-template-areas:
+                "role name"
+                "total correct"
+                "wrong hearts"
+                "timer timer";
         }
-        
+
+        /* 桌面版的版面配置 (寬度大於 850px 才套用) */
         @media (min-width: 850px) {
             .status-info {
                 grid-template-columns: repeat(5, 1fr);
                 grid-template-rows: auto auto;
                 gap: 10px;
+                /* 修正：調整第二排的欄位寬度，使其視覺更平衡 */
                 grid-template-areas:
                     "role name total correct wrong"
-                    "hearts hearts timer timer timer";
+                    "hearts hearts hearts timer timer";
             }
         }
+        /* --- END OF CSS FIX --- */
+
 
         .status-item {
             text-align: center;
@@ -596,7 +607,7 @@
         <div class="result-image-placeholder">勝利插圖位置 (可替換成勝利圖片)</div>
         <div class="result-buttons-container">
             <button class="restart-button" onclick="restartGame()">🎮 重新開始</button>
-            <button class="download-button" onclick="downloadResultImage('victory-page')">🖼️ 挑戰紀錄下載</button>
+            <button class="download-button" onclick="downloadResultImage('victory-page', event)">🖼️ 挑戰紀錄下載</button>
         </div>
     </div>
 
@@ -609,7 +620,7 @@
         </div>
         <div class="result-buttons-container">
             <button class="restart-button" onclick="restartGame()">🔄 投胎重生</button>
-            <button class="download-button" onclick="downloadResultImage('defeat-page')">🖼️ 挑戰紀錄下載</button>
+            <button class="download-button" onclick="downloadResultImage('defeat-page', event)">🖼️ 挑戰紀錄下載</button>
         </div>
     </div>
 
@@ -806,36 +817,39 @@
             document.getElementById('defeat-page').classList.remove('hidden');
         }
 
-        async function downloadResultImage(elementId) {
+        // --- START OF JAVASCRIPT FIX ---
+        async function downloadResultImage(elementId, event) {
+            const button = event.target;
             const originalElement = document.getElementById(elementId);
-            if (!originalElement) return;
+            if (!originalElement || button.disabled) return;
 
-            // 1. 複製節點
-            const clone = originalElement.cloneNode(true);
+            const originalButtonText = button.textContent;
+            button.disabled = true;
+            button.textContent = '正在產生圖片...';
 
-            // 2. 準備一個看不見的容器來放置複製節點
+            // 建立一個臨時容器來進行截圖，避免影響原始畫面且能設定背景
             const captureContainer = document.createElement('div');
             captureContainer.style.position = 'absolute';
-            captureContainer.style.left = '-9999px'; // 移到螢幕外
-            captureContainer.style.top = '-9999px';
-            captureContainer.style.width = originalElement.offsetWidth + 'px'; // 確保寬度一致
+            captureContainer.style.left = '-9999px'; // 移出畫面外
+            captureContainer.style.top = '0px';
+            captureContainer.style.width = originalElement.offsetWidth + 'px';
+            
+            const clone = originalElement.cloneNode(true);
+            // 強制設定白色背景，避免漸層背景在截圖時變透明
+            clone.style.background = '#ffffff'; 
+            clone.style.backdropFilter = 'none';
+            clone.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)'; 
 
-            // 3. 修改複製節點的樣式，使其適合截圖
-            clone.style.background = '#f8f9fa'; // 設定純色背景
-            clone.style.backdropFilter = 'none'; // 移除濾鏡
-            clone.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)'; // 可以保留或移除陰影
-
-            // 4. 將複製節點放入看不見的容器，再將容器加入頁面
             captureContainer.appendChild(clone);
             document.body.appendChild(captureContainer);
             
             try {
-                // 5. 對處理過的複製節點進行截圖
                 const canvas = await html2canvas(clone, {
-                    useCORS: true
+                    useCORS: true,
+                    scale: 2, // 產生 2x 解析度的圖片，在手機上更清晰
+                    backgroundColor: '#ffffff' // 明確設定背景色，避免透明問題
                 });
                 
-                // 6. 產生下載連結
                 const link = document.createElement('a');
                 link.download = '勞基法試煉-挑戰紀錄.png';
                 link.href = canvas.toDataURL('image/png');
@@ -845,10 +859,13 @@
                 console.error('下載紀錄時發生錯誤:', error);
                 alert('抱歉，下載紀錄時發生預期外的錯誤，請稍後再試。');
             } finally {
-                // 7. 無論成功或失敗，都移除臨時的容器
+                // 清理臨時建立的元素
                 document.body.removeChild(captureContainer);
+                button.disabled = false;
+                button.textContent = originalButtonText;
             }
         }
+        // --- END OF JAVASCRIPT FIX ---
 
         function restartGame() {
             document.querySelectorAll('.main-container').forEach(c => c.classList.add('hidden'));

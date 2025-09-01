@@ -7,13 +7,18 @@
 
 // 題庫數據 (由各部分組合而成)
 // 這裡會合併來自所有 question-partX.js 的資料
+// --- START OF JAVASCRIPT FIX ---
+// 修正：安全地合併題庫，避免因部分題目檔遺失而導致整個遊戲崩潰。
+// 透過 `typeof ... !== 'undefined'` 檢查每個題庫部分變數是否存在，
+// 如果存在就將其加入，如果不存在就加入一個空陣列，避免產生錯誤。
 const questionBank = [
-    ...questionBankPart1,
-    ...questionBankPart2,
-    ...questionBankPart3,
-    ...questionBankPart4,
-    ...questionBankPart5
+    ...(typeof questionBankPart1 !== 'undefined' ? questionBankPart1 : []),
+    ...(typeof questionBankPart2 !== 'undefined' ? questionBankPart2 : []),
+    ...(typeof questionBankPart3 !== 'undefined' ? questionBankPart3 : []),
+    ...(typeof questionBankPart4 !== 'undefined' ? questionBankPart4 : []),
+    ...(typeof questionBankPart5 !== 'undefined' ? questionBankPart5 : [])
 ];
+// --- END OF JAVASCRIPT FIX ---
 
 // 命運卡片
 const fateCards = [
